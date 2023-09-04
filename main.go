@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
@@ -25,9 +26,8 @@ func main() {
 			err := rdb.Set(ctx, id, text, 0).Err()
 
 			if err != nil {
-				fmt.Print(err)
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("Failed to write in db"))
+				w.Write([]byte(err.Error()))
 			} else {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
@@ -47,9 +47,14 @@ func main() {
 			val, err := rdb.Get(ctx, id).Result()
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("Failed to read db"))
+				w.Write([]byte(err.Error()))
 			} else {
-				fmt.Fprintf(w, val)
+				if isBase64(val) {
+					w.Header().Set("Content-Type", "text/html")
+					fmt.Fprintf(w, "<!DOCTYPE html><html><body><img alt=\"image\" src=\"data:image/png;base64,%s\" /></body></html>", val)
+				} else {
+					fmt.Fprintf(w, val)
+				}
 			}
 		} else {
 			w.WriteHeader(http.StatusNotFound)
@@ -57,6 +62,10 @@ func main() {
 
 		}
 	})
-
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func isBase64(s string) bool {
+	_, err := base64.StdEncoding.DecodeString(s)
+	return err == nil
 }
