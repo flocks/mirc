@@ -53,7 +53,7 @@ func main() {
 					w.Header().Set("Content-Type", "text/html")
 					fmt.Fprintf(w, "<!DOCTYPE html><html><body><img alt=\"image\" src=\"data:image/png;base64,%s\" /></body></html>", val)
 				} else {
-					fmt.Fprintf(w, val)
+					fmt.Fprintf(w, "<!DOCTYPE html><html><body><pre>%s</pre></body></html>", val)
 				}
 			}
 		} else {
